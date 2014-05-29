@@ -1,0 +1,60 @@
+<html>
+<head>
+    <style type="text/css" media="screen">
+    html,body {
+        background-image:url(http://piq.codeus.net/static/media/userpics/piq_78563_400x400.png);
+        height:50000px;
+    }
+    #meter {
+        background-color:#33AB39;
+        height:20px;
+        position:fixed;
+        top:0px;
+        left:0px;
+    }
+    </style>
+    <script type="text/javascript" src='/static/js/lib/jquery.js'></script>
+    <script type="text/javascript" src='/static/js/ocean.js'></script>
+</head>
+<body>
+<!--
+<video id="aux" controls>
+       <source src='http://www.youtube.com/watch?v=zmPzbZVUp3g' type='video/youtube'>
+</video>
+-->
+
+    <div id='meter'></div>
+    <script type="text/javascript">
+    /*
+        var ctx = new webkitAudioContext();
+        var url = '/static/zmPzbZVUp3g.mp3';
+        var audio = new Audio(url);
+        // 2048 sample buffer, 1 channel in, 1 channel out
+        var processor = ctx.createJavaScriptNode(2048, 1, 1);
+        var meter = document.getElementById('meter');
+        var source;
+        var srms = 0;
+
+        audio.addEventListener('canplaythrough', function(){
+            source = ctx.createMediaElementSource(audio)
+            source.connect(processor)
+            source.connect(ctx.destination)
+            processor.connect(ctx.destination)
+            audio.play()
+          }, false);
+
+          // loop through PCM data and calculate average
+          // volume for a given 2048 sample buffer
+          processor.onaudioprocess = function(evt){
+            var input = evt.inputBuffer.getChannelData(0)
+              , len = input.length
+              , total = i = 0
+              , rms
+            while ( i < len ) total += Math.abs( input[i++] )
+            rms = Math.sqrt( total / len )
+            srms = (srms * 9 + rms)/10;
+            meter.style.width = ( srms * 100 ) + '%'
+          }
+          */
+    </script>
+</body>
