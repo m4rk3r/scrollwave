@@ -1,4 +1,5 @@
 var test = 'zmPzbZVUp3g';
+var value = 0;
 
 $(function (){
     $.getJSON('/get/'+test, function (data){
@@ -30,10 +31,15 @@ $(function (){
                   , rms
                 while ( i < len ) total += Math.abs( input[i++] )
                 rms = Math.sqrt( total / len )
-                srms = (srms * 4 + rms)/5;
-                meter.style.width = ( srms * 100 ) + '%'
-                window.scrollBy(0, parseInt(srms*100))
+                value = (srms * 4 + rms)/5;
+                meter.style.width = ( value * 100 ) + '%'
+                //window.scrollBy(0, parseInt(srms*100))
               }
+
+              (function anim(){
+                   window.scrollBy(0, value*100);
+                   window.requestAnimationFrame(anim);
+              })();
         }
     })
 
