@@ -7,9 +7,9 @@ from flask import Flask, redirect, url_for, jsonify, render_template
 
 DEBUG = True
 FILE_TMPLT = '{0}.mp3'
-STORAGE = 'storage/'
-FILE_PATH = '/Users/mark/play/scrollwave/'
-MEDIA_PATH = '/static/'
+STORAGE = 'static/media/'
+FILE_PATH = '/Users/mark/programming/scrollwave/'
+MEDIA_PATH = '/static/media/'
 
 app = Flask(__name__)
 
@@ -18,7 +18,7 @@ RDS_KEY = 'scroll.'
 rds = redis.Redis()
 
 def get_vid(id):
-    process[id] = subprocess.Popen(['./youtube-dl',id,'-x','--audio-format','mp3','-o','storage/%(id)s.%(ext)s'])
+    process[id] = subprocess.Popen(['./youtube-dl',id,'-x','--audio-format','mp3','-o','static/%(id)s.%(ext)s'])
 
 @app.route('/')
 def index():

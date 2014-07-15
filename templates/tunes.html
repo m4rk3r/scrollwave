@@ -2,8 +2,10 @@
 <head>
     <style type="text/css" media="screen">
     html,body {
-        background-image:url(http://piq.codeus.net/static/media/userpics/piq_78563_400x400.png);
+        /*background-image:url(http://piq.codeus.net/static/media/userpics/piq_78563_400x400.png);*/
+        background-image: url(/static/dot.png);
         height:50000px;
+        background-color:rgb(80,80,80);
     }
     #meter {
         background-color:#33AB39;
@@ -12,10 +14,18 @@
         top:0px;
         left:0px;
     }
+    canvas {
+        position:fixed;
+        left:0;
+        top:0;
+    }
     </style>
     <script type="text/javascript" src='/static/js/lib/jquery.js'></script>
+    <script type="text/javascript" src='/static/js/lib/underscore-min.js'></script>
+    <script type="text/javascript" src='/static/js/lib/chart.js'></script>
     <script type="text/javascript" src='/static/js/ocean.js'></script>
 </head>
 <body>
+    <canvas id='myChart' width='400' height='200'>
     <div id='meter'></div>
 </body>
