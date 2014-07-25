@@ -3,7 +3,7 @@
     <style type="text/css" media="screen">
     html,body {
         /*background-image:url(http://piq.codeus.net/static/media/userpics/piq_78563_400x400.png);*/
-        background-image: url(/static/dot.png);
+        background-image: url(/static/bg.png);
         height:50000px;
         background-color:rgb(80,80,80);
     }
@@ -19,6 +19,14 @@
         left:0;
         top:0;
     }
+    #debug {
+        position:fixed;
+        top:0;
+        left:0;
+        padding:20px;
+        background-color:rgba(25,25,25,0.75);
+        color:#FFF;
+    }
     </style>
     <script type="text/javascript" src='/static/js/lib/jquery.js'></script>
     <script type="text/javascript" src='/static/js/lib/underscore-min.js'></script>
@@ -26,6 +34,7 @@
     <script type="text/javascript" src='/static/js/ocean.js'></script>
 </head>
 <body>
-    <canvas id='myChart' width='400' height='200'>
+    <canvas id='myChart' width='400' height='200'></canvas>
     <div id='meter'></div>
+    <div id='debug'>30.00</div>
 </body>

@@ -10,7 +10,17 @@ var LOG = true;
 var min=0,
     max=0,
     opts=null,
-    ctx2=null;
+    ctx2=null,
+    lastin=0;
+
+
+var accum=0;
+var vel=0;
+var drag = -0.03
+var mass = 3;
+
+var DEBUG;
+
 
 window.requestAnimFrame = function(){
     return (
@@ -51,6 +61,7 @@ function eleven_pt_smooth(i){
 }
 
 $(function (){
+     DEBUG = $('#debug');
     $.getJSON('/get/'+test, function (data){
         if(data.status == 'success'){
             var ctx = new webkitAudioContext();
@@ -126,6 +137,10 @@ $(function (){
                     
                     if((LOG && idx%inter==0)){
                         var input = (value-min) * 100;
+                        if(input-lastin > 1.0){
+                            accum += (input-lastin);
+                        }
+                        lastin=input;
                         _data.push(input>=1?input:0);
                         labels.push( idx++ );
                         //if(idx > skip+amnt){
@@ -139,7 +154,7 @@ $(function (){
                                 datasets: [
                                     {
                                         label: "My First dataset",
-                                        fillColor: "rgba(220,220,220,0.2)",
+                                        fillColor: "rgba(220,220,220,0.85)",
                                         strokeColor: "rgba(220,220,220,1)",
                                         pointColor: "rgba(220,220,220,1)",
                                         pointStrokeColor: "#fff",
@@ -163,8 +178,11 @@ $(function (){
             if(!LOG || true){
                 var anim = function (){
                     if((value-min)*100 >= 1)
-                        window.scrollBy(0, value*30);
-                    
+                        window.scrollBy(0, Math.floor(accum));
+                        vel = (drag * accum)/mass;
+                        accum += vel;
+                        DEBUG.html(accum);
+                                             
                     window.requestAnimFrame(anim);
                 };
                 anim();
