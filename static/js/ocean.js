@@ -78,7 +78,7 @@ $(function (){
                 scaleStartValue:0,
                 showTooltips:false,
                 scaleShowLabels:false,
-            showScale:false};
+                showScale:false};
             
             audio = new Audio(url);
             // 2048 sample buffer, 1 channel in, 1 channel out
@@ -153,7 +153,7 @@ $(function (){
                                 labels: labels,
                                 datasets: [
                                     {
-                                        label: "My First dataset",
+                                        label: "",
                                         fillColor: "rgba(220,220,220,0.85)",
                                         strokeColor: "rgba(220,220,220,1)",
                                         pointColor: "rgba(220,220,220,1)",
@@ -181,7 +181,7 @@ $(function (){
                         window.scrollBy(0, Math.floor(accum));
                         vel = (drag * accum)/mass;
                         accum += vel;
-                        DEBUG.html(accum);
+                        DEBUG.html(accum.toFixed(3));
                                              
                     window.requestAnimFrame(anim);
                 };
