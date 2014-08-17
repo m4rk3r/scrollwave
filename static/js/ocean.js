@@ -82,7 +82,7 @@ $(function (){
             
             audio = new Audio(url);
             // 2048 sample buffer, 1 channel in, 1 channel out
-            var processor = ctx.createJavaScriptNode(2048, 1, 1);
+            var processor = ctx.createScriptProcessor(2048, 1, 1);
             var meter = document.getElementById('meter');
             var source;
             
