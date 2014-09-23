@@ -2,48 +2,81 @@
 <head>
 <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
 <script type="text/javascript">
+var w = 1024;
+var h = 768;
+var steps = 100;
+var points = [];    
+var calculated;
 
 $(function (){
     var canvas = document.getElementById('graph');
     var ctx = canvas.getContext('2d');
 
-    //ctx.scale(1,-1)
-
-    var w = 1024;
-    var h = 768;
-    var steps = 100
-    var T1 = {x:0,y:0}
-    var T2 = {x:0,y:0}
-
     var px_input = $("#px");
     var py_input = $('#py');
 
-    $('#t1').on('keyup',function (){
-        obj = $(this).val().split(',');
-        if(obj.length<2 || isNaN(obj[0]) || isNaN(obj[1]))return false;
-
-        T1 = {
-            x: parseFloat(obj[0]),
-            y: parseFloat(obj[1])
-        }
-        draw();
+    $('#points').on('keyup',save);
+    $('#steps').on('keyup',save);
+    
+    $(document).on('keyup',function (evt){
+        if(evt.keyCode == 76)draw(); // l
+        if(evt.keyCode == 83)save(); // s
     })
-    $('#t2').on('keyup',function (){
-        obj = $(this).val().split(',');
-        if(obj.length<2 || isNaN(obj[0]) || isNaN(obj[1]))return false;
-
-        T2 = {
-            x: parseFloat(obj[0]),
-            y: parseFloat(obj[1])
+    
+    function save(){
+        var obj = $('#points').val().split(' ');
+        //if(obj.length<2 || isNaN(obj[0]) || isNaN(obj[1]))obj = [0,0,];
+        
+        points = [];
+        for(i=0; i < obj.length; i++){
+            var _o = obj[i].split(',');
+            points.push({x:_o[0],y:_o[1]});
         }
-        draw();
-    })
+        
+        steps = parseInt($('#steps').val());
+        window.location.hash = build_hash();
+    }
 
+    function build_hash(){
+        var _h ='';
+        for(i=0;i<points.length;i++)
+            _h += 'x'+i+'='+points[i].x+'&y'+i+'='+points[i].y+'&';
+        return _h+'s='+steps;
+    }
+    
+    function read_hash(){
+        var hash = window.location.hash;
+        if(hash.length < 1)return;
+        
+        var items = hash.split('&');
+        points = [];
+        for(i=1;i<items.length-1;i+=2){
+            var _x = items[i-1].split('=')[1];
+            var _y = items[i].split('=')[1];
+            points.push({x:parseFloat(_x)*w,y:parseFloat(_y)});
+        }
+        steps = parseInt(items[items.length-1].split('=')[1]);
+                
+        // $('#t1').val(T1.x+','+T1.y);
+        // $('#t2').val(T2.x+','+T2.y);
+    }
+    
     function draw(){
-        window.scrollTo(0,0);
+        //window.scrollTo(0,0);
         ctx.clearRect(0,0,w,h);
-        var P1 = {x:0,y:h/2};
-        var P2 = {x:w,y:h/2};
+        
+        read_hash();
+        // points = [
+        //     {x:0,y:0},
+        //     {x:0.25*w,y:-10},
+        //     {x:0.5*w,y:-5},
+        //     {x:0.75*w,y:5},
+        //     {x:1*w,y:0}
+        // ]
+        
+        if(!points.length) return;
+        
+        var P1 = points[0];
 
         ctx.strokeStyle="rgba(255,0,0,.25)";
         ctx.beginPath();
@@ -53,36 +86,70 @@ $(function (){
 
         ctx.strokeStyle='rgba(30,30,100,0.75)';
         ctx.beginPath();
-        ctx.moveTo(P1.x,P1.y);
+        ctx.moveTo(0,h/2);
 
-        //for(i=0; i < steps; i++){
-        i = 0;
-        var iter = setInterval(function (){
-            var s = i / steps;
-            var h1 = 2 * Math.pow(s,3) - 3 * Math.pow(s,2) + 1;
-            var h2 = -2 * Math.pow(s,3) + 3 * Math.pow(s,2);
-            var h3 = Math.pow(s,3) - 2 * Math.pow(s,2) + s;
-            var h4 = Math.pow(s,3) - Math.pow(s,2);
+        var t = 0.5;
+        var c = 0.5;
+        var b = 0;
+        
+        /* copy first & last point */
+        points.unshift(points[0]);
+        points.push(points[points.length-1]);
+        calculated = [];
 
-            p = {
-                x: P1.x * h1 + h2 * P2.x + h3 * T1.x + h4 * T2.x,
-                y: P1.y * h1 + h2 * P2.y + h3 * T1.y + h4 * T2.y,
+        /* start one ahead & stop one before */
+        for(p=1; p < points.length-2; p++){
+            
+            var T1 = {
+                x: ((1-t)*(1+b)*(1+c)/2)*(points[p].x - points[p-1].x) + 
+                   ((1-t)*(1-b)*(1-c))/2 * (points[p+1].x - points[p].x),
+                y: ((1-t)*(1+b)*(1+c)/2)*(points[p].y - points[p-1].y) + 
+                   ((1-t)*(1-b)*(1-c))/2 * (points[p+1].y - points[p].y),
             }
-            ctx.lineTo(p.x,p.y);
-            ctx.stroke();
+            
+            var T2 = {
+                x: ((1-t)*(1+b)*(1-c))/2 * (points[p+1].x - points[p].x) +
+                   ((1-t)*(1-b)*(1+c))/2 * (points[p+2].x-points[p+1].x),
+                y: ((1-t)*(1+b)*(1-c))/2 * (points[p+1].y - points[p].y) +
+                   ((1-t)*(1-b)*(1+c))/2 * (points[p+2].y-points[p+1].y)
+            }
+            
+            for(i=0; i < steps; i++){
+                var s = i / steps;
+                
+                var h1 = 2 * Math.pow(s,3) - 3 * Math.pow(s,2) + 1;
+                var h2 = -2 * Math.pow(s,3) + 3 * Math.pow(s,2);
+                var h3 = Math.pow(s,3) - 2 * Math.pow(s,2) + s;
+                var h4 = Math.pow(s,3) - Math.pow(s,2);
 
-            //window.scrollBy(0, p.y - h/2);
-            px_input.val(Math.round(p.x));
-            py_input.val(Math.round(p.y));
-
+                _p = {
+                    x: h1 * points[p].x + h2 * points[p+1].x + h3 * T1.x + h4 * T2.x,
+                    y: h1 * points[p].y + h2 * points[p+1].y + h3 * T1.y + h4 * T2.y,
+                }
+                ctx.lineTo(_p.x,_p.y*5+h/2);
+                
+                calculated.push(_p.y);
+                
+                ctx.stroke();
+                //window.scrollBy(0, p.y*-1);
+            }        
+        }
+        
+        var i = 0;
+        var iter = setInterval(function (){
+            var o = Math.round(calculated[i]*-1)
+            window.scrollBy(0, o);
+            
             i++;
-            if(i > steps){
+            if(i > calculated.length-1){
                 clearInterval(iter)
             }
-        },100);
+        },16);
+        
     }
-
-    $('#t1,#t2').trigger('keyup');
+    
+    //read_hash();
+    draw();
 });
 </script>
 <style type="text/css" media="screen">
@@ -94,19 +161,26 @@ $(function (){
     }
     body {
         height:30000px;
-        background-image:url(dot.png);
+        background-image:url(static/bg.png);
+        /*background-image:url(dot.png);*/
+        background-color:rgba(255,255,255,0.5);
     }
     #values,#graph {
         position:fixed;
     }
+    #points {
+        width:500px;
+        border:none;
+        padding:10px;
+        font-size:15px;
+    }
 </style>
 </head>
 <body>
+
     <div id='values'>
-        T1:<input type='text' id='t1' value='400,-2000'><BR>
-        T2:<input type='text' id='t2' value='1700,-400'><BR>
-        X:<input type='text' id='px' value=''><BR>
-        Y:<input type='text' id='py' value=''><BR>
+        points:<input type='text' id='points' value='0,0 0.25,-20 0.5,-10 0.75,-0.5 1,0'><BR>
+        ST:<input type='text' id='steps' value='100'><BR>
     </div>
     <canvas id='graph' width='1024' height='768' style='border:solid 1px;'></canvas>
 </body>

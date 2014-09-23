@@ -1,0 +1,156 @@
+<html>
+<head>
+<script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+<script type="text/javascript">
+
+$(function (){
+    var canvas = document.getElementById('graph');
+    var ctx = canvas.getContext('2d');
+
+    //ctx.scale(1,-1)
+
+    var w = 1024;
+    var h = 768;
+    var steps = 500
+    var T1 = {x:0,y:0}
+    var T3 = {x:0,y:0}
+    
+    var accum=0;
+    var vel=0;
+    var drag = -0.05
+    var mass = 2;
+    
+    var lastinput=0;
+    var input;
+    
+
+    var px_input = $("#px");
+    var py_input = $('#py');
+
+    $('#t1').on('keyup',save);
+    $('#t2').on('keyup',save);
+    $('#steps').on('keyup',save);
+    
+    $(document).on('keyup',function (evt){
+        if(evt.keyCode == 76)draw(); // l
+        if(evt.keyCode == 83)save(); // s
+    })
+    
+    function save(){
+        var obj = $('#t1').val().split(',');
+        if(obj.length<2 || isNaN(obj[0]) || isNaN(obj[1]))obj = [0,0,];
+
+        T1 = {
+            x: parseFloat(obj[0]),
+            y: parseFloat(obj[1])
+        }
+        
+        obj = $('#t2').val().split(',');
+        if(obj.length<2 || isNaN(obj[0]) || isNaN(obj[1]))obj = [0,0,];
+
+        T2 = {
+            x: parseFloat(obj[0]),
+            y: parseFloat(obj[1])
+        }
+        
+        steps = parseInt($('#steps').val());
+        window.location.hash = build_hash();
+    }
+
+    function build_hash(){
+        return 'x1='+T1.x+'&y1='+T1.y+'&x2='+T2.x+'&y2='+T2.y+'&s='+steps;
+    }
+    
+    function read_hash(){
+        var hash = window.location.hash;
+        if(hash.length < 1)return;
+        
+        var items = hash.split('&');
+        T1 = {x:parseInt(items[0].split('=')[1]),y:parseInt(items[1].split('=')[1])}
+        T2 = {x:parseInt(items[2].split('=')[1]),y:parseInt(items[3].split('=')[1])}
+        steps = parseInt(items[4].split('=')[1]);
+        
+        
+        $('#t1').val(T1.x+','+T1.y);
+        $('#t2').val(T2.x+','+T2.y);
+    }
+
+    function draw(){
+        window.scrollTo(0,0);
+        ctx.clearRect(0,0,w,h);
+        var P1 = {x:0,y:0};
+        var P2 = {x:w,y:0};
+        
+        read_hash();        
+
+        ctx.strokeStyle="rgba(255,0,0,.25)";
+        ctx.beginPath();
+        ctx.moveTo(0,h/2);
+        ctx.lineTo(w,h/2);
+        ctx.stroke();
+
+        ctx.strokeStyle='rgba(30,30,100,0.75)';
+        ctx.beginPath();
+        ctx.moveTo(P1.x,P1.y);
+
+        i = 0;
+        var iter = setInterval(function (){            
+            var s = i / steps;
+            var h1 = 2 * Math.pow(s,3) - 3 * Math.pow(s,2) + 1;
+            var h2 = -2 * Math.pow(s,3) + 3 * Math.pow(s,2);
+            var h3 = Math.pow(s,3) - 2 * Math.pow(s,2) + s;
+            var h4 = Math.pow(s,3) - Math.pow(s,2);
+
+            p = {
+                x: P1.x * h1 + P2.x * h2 + T1.x * h3 + T2.x * h4,
+                y: P1.y * h1 + P2.y * h2 + T1.y * h3 + T2.y * h4,
+            }
+            ctx.lineTo(p.x,p.y+h/2);
+            ctx.stroke();
+            
+            //window.scrollBy(0, p.y*-1);
+            
+            px_input.val(Math.round(p.x));
+            py_input.val(Math.round(p.y));
+
+            i++;
+            if(i > steps){
+                clearInterval(iter)
+            }
+        },16);
+        
+    }
+    
+    read_hash();
+});
+</script>
+<style type="text/css" media="screen">
+    #values {
+        position:absolute;
+        top:30px;
+        left:30px;
+        z-index:99;
+    }
+    body {
+        height:30000px;
+        /*background-image:url(static/bg.png);*/
+        background-image:url(dot.png);
+        background-color:rgba(255,255,255,0.5);
+    }
+    #values,#graph {
+        position:fixed;
+    }
+</style>
+</head>
+<body>
+    <div id='values'>
+        T1:<input type='text' id='t1' value='400,-500'><BR>
+        T2:<input type='text' id='t2' value='800,-200'><BR>
+        T3:<input type='text' id='t3' value='1700,-200'><BR>
+        ST:<input type='text' id='steps' value='100'><BR>
+        X:<input type='text' id='px' value=''><BR>
+        Y:<input type='text' id='py' value=''><BR>
+    </div>
+    <canvas id='graph' width='1024' height='768' style='border:solid 1px;'></canvas>
+</body>
+</html>
