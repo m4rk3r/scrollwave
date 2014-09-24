@@ -5,7 +5,7 @@
 var w = 1024;
 var h = 768;
 var steps = 100;
-var points = [];    
+var points = [];
 var calculated;
 
 $(function (){
@@ -17,24 +17,37 @@ $(function (){
 
     $('#points').on('keyup',save);
     $('#steps').on('keyup',save);
-    
+
     $(document).on('keyup',function (evt){
         if(evt.keyCode == 76)draw(); // l
-        if(evt.keyCode == 83)save(); // s
+        if(evt.keyCode == 83)save(evt,true); // s
     })
-    
-    function save(){
-        var obj = $('#points').val().split(' ');
+
+    function save(evt,triggered){
+        if(typeof triggered==="undefined")triggered=false;
+
+        console.log(triggered)
+
+        var obj = $('#points').val().trim().split(' ');
         //if(obj.length<2 || isNaN(obj[0]) || isNaN(obj[1]))obj = [0,0,];
-        
+
         points = [];
+        var _s = '';
         for(i=0; i < obj.length; i++){
             var _o = obj[i].split(',');
             points.push({x:_o[0],y:_o[1]});
+            _s += _o[0]+','+_o[1]+' ';
         }
-        
+
         steps = parseInt($('#steps').val());
         window.location.hash = build_hash();
+
+        //_s += steps;
+
+        if(triggered)
+            $('#points').val(_s)
+
+        draw(true);
     }
 
     function build_hash(){
@@ -43,11 +56,11 @@ $(function (){
             _h += 'x'+i+'='+points[i].x+'&y'+i+'='+points[i].y+'&';
         return _h+'s='+steps;
     }
-    
+
     function read_hash(){
         var hash = window.location.hash;
         if(hash.length < 1)return;
-        
+
         var items = hash.split('&');
         points = [];
         for(i=1;i<items.length-1;i+=2){
@@ -56,15 +69,16 @@ $(function (){
             points.push({x:parseFloat(_x)*w,y:parseFloat(_y)});
         }
         steps = parseInt(items[items.length-1].split('=')[1]);
-                
+
         // $('#t1').val(T1.x+','+T1.y);
         // $('#t2').val(T2.x+','+T2.y);
     }
-    
-    function draw(){
+
+    function draw(save){
+        if(typeof save === "undefined")save=false;
         //window.scrollTo(0,0);
         ctx.clearRect(0,0,w,h);
-        
+
         read_hash();
         // points = [
         //     {x:0,y:0},
@@ -73,9 +87,9 @@ $(function (){
         //     {x:0.75*w,y:5},
         //     {x:1*w,y:0}
         // ]
-        
+
         if(!points.length) return;
-        
+
         var P1 = points[0];
 
         ctx.strokeStyle="rgba(255,0,0,.25)";
@@ -88,10 +102,10 @@ $(function (){
         ctx.beginPath();
         ctx.moveTo(0,h/2);
 
-        var t = 0.5;
+        var t = 0;
         var c = 0.5;
         var b = 0;
-        
+
         /* copy first & last point */
         points.unshift(points[0]);
         points.push(points[points.length-1]);
@@ -99,24 +113,24 @@ $(function (){
 
         /* start one ahead & stop one before */
         for(p=1; p < points.length-2; p++){
-            
+
             var T1 = {
-                x: ((1-t)*(1+b)*(1+c)/2)*(points[p].x - points[p-1].x) + 
+                x: ((1-t)*(1+b)*(1+c)/2)*(points[p].x - points[p-1].x) +
                    ((1-t)*(1-b)*(1-c))/2 * (points[p+1].x - points[p].x),
-                y: ((1-t)*(1+b)*(1+c)/2)*(points[p].y - points[p-1].y) + 
+                y: ((1-t)*(1+b)*(1+c)/2)*(points[p].y - points[p-1].y) +
                    ((1-t)*(1-b)*(1-c))/2 * (points[p+1].y - points[p].y),
             }
-            
+
             var T2 = {
                 x: ((1-t)*(1+b)*(1-c))/2 * (points[p+1].x - points[p].x) +
                    ((1-t)*(1-b)*(1+c))/2 * (points[p+2].x-points[p+1].x),
                 y: ((1-t)*(1+b)*(1-c))/2 * (points[p+1].y - points[p].y) +
                    ((1-t)*(1-b)*(1+c))/2 * (points[p+2].y-points[p+1].y)
             }
-            
+
             for(i=0; i < steps; i++){
                 var s = i / steps;
-                
+
                 var h1 = 2 * Math.pow(s,3) - 3 * Math.pow(s,2) + 1;
                 var h2 = -2 * Math.pow(s,3) + 3 * Math.pow(s,2);
                 var h3 = Math.pow(s,3) - 2 * Math.pow(s,2) + s;
@@ -127,27 +141,29 @@ $(function (){
                     y: h1 * points[p].y + h2 * points[p+1].y + h3 * T1.y + h4 * T2.y,
                 }
                 ctx.lineTo(_p.x,_p.y*5+h/2);
-                
-                calculated.push(_p.y);
-                
+
+                if(!save)
+                    calculated.push(_p.y);
+
                 ctx.stroke();
                 //window.scrollBy(0, p.y*-1);
-            }        
-        }
-        
-        var i = 0;
-        var iter = setInterval(function (){
-            var o = Math.round(calculated[i]*-1)
-            window.scrollBy(0, o);
-            
-            i++;
-            if(i > calculated.length-1){
-                clearInterval(iter)
             }
-        },16);
-        
+        }
+
+        if(!save){
+            var i = 0;
+            var iter = setInterval(function (){
+                var o = Math.round(calculated[i]*-1)
+                window.scrollBy(0, o);
+
+                i++;
+                if(i > calculated.length-1){
+                    clearInterval(iter)
+                }
+            },16);
+        }
     }
-    
+
     //read_hash();
     draw();
 });
@@ -173,6 +189,9 @@ $(function (){
         border:none;
         padding:10px;
         font-size:15px;
+    }
+    #graph {
+        background-color:rgba(255,255,255,0.5);
     }
 </style>
 </head>
