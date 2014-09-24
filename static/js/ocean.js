@@ -16,8 +16,8 @@ var min=0,
 
 var accum=0;
 var vel=0;
-var drag = -0.03
-var mass = 3;
+var drag = -0.05
+var mass = 20;
 
 var DEBUG;
 
@@ -61,6 +61,35 @@ function eleven_pt_smooth(i){
 }
 
 $(function (){
+    /*
+    var anim = function (){
+        window.scrollBy(0, Math.floor(accum));
+        vel = (drag * accum)/mass;
+        accum += vel;
+        
+        if(accum<0.1)accum=0;
+        console.log(accum)
+        window.requestAnimFrame(anim);
+    };
+    anim();
+    
+    
+    $(window).on('keypress',function (){
+        accum += 20;
+    })
+
+    return true;
+    */
+    $('#mass').on('keyup',function (){
+        var val = parseFloat($(this).val());
+        mass = isNaN(val)?0.9:val;
+    })
+    $('#drag').on('keyup',function (){
+        var val = parseFloat($(this).val());
+        drag = isNaN(val)?1:val;
+    })
+    
+    
      DEBUG = $('#debug');
     $.getJSON('/get/'+test, function (data){
         if(data.status == 'success'){
@@ -183,15 +212,21 @@ $(function (){
                         accum += vel;
                         DEBUG.html(accum.toFixed(3));
                                              
+                        if($(window).scrollTop() >= $('body').height()-window.innerHeight*1.5){
+                            window.scrollTo(0,0);
+                        }
+                                             
                     window.requestAnimFrame(anim);
                 };
                 anim();
             }
         }
         
-        $(document).on('keypress',function (){
-            audio.pause();
-            processor.onaudioprocess = null;
+        $(document).on('keypress',function (evt){
+            if(evt.keyCode==32){            
+                audio.pause();
+                processor.onaudioprocess = null;
+            }
         })
     });
 

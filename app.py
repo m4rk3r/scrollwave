@@ -9,7 +9,7 @@ DEBUG = True
 FILE_TMPLT = '{0}.mp3'
 STORAGE = 'static/media/'
 FILE_PATH = '/Users/mark/programming/scrollwave/'
-MEDIA_PATH = '/static/media/'
+MEDIA_PATH = 'http://localhost:9000/static/media/'
 
 app = Flask(__name__)
 
