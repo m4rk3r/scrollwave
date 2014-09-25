@@ -1,8 +1,10 @@
 var test = 'zmPzbZVUp3g';
+
 var value = 0;
 var filter_width=9;
 var avg = [];
-var _data = [];
+
+var chart_data = [];
 var labels = [];
 var idx = 0;
 var audio;
@@ -20,33 +22,9 @@ var drag = -0.05
 var mass = 20;
 
 var DEBUG;
+var SCALER = 100;
 
-
-window.requestAnimFrame = function(){
-    return (
-        window.webkitRequestAnimationFrame ||
-            window.requestAnimationFrame       ||
-            window.mozRequestAnimationFrame    ||
-            window.oRequestAnimationFrame      ||
-            window.msRequestAnimationFrame     ||
-            function(/* function */ callback){
-                return window.setTimeout(callback, 16);
-            }
-    );
-}();
-window.closeAnimFrame = function (){
-    return   (
-        window.webkitCancelAnimationFrame||
-            window.cancelAnimationFrame ||
-            window.oRequestAnimationFrame ||
-            window.mozCancelAnimationFrame ||
-            window.msCancelAnimationFrame ||
-            function(interval){
-                return window.clearTimeout(interval);
-            }
-    );
-}();
-
+/* noise reduction */
 function five_pt_smooth(i){
     return (i[0] + i[1]*2 + i[2]*3 + i[3]*2 + i[4])/9;
 }
@@ -61,25 +39,7 @@ function eleven_pt_smooth(i){
 }
 
 $(function (){
-    /*
-    var anim = function (){
-        window.scrollBy(0, Math.floor(accum));
-        vel = (drag * accum)/mass;
-        accum += vel;
-        
-        if(accum<0.1)accum=0;
-        console.log(accum)
-        window.requestAnimFrame(anim);
-    };
-    anim();
-    
-    
-    $(window).on('keypress',function (){
-        accum += 20;
-    })
-
-    return true;
-    */
+    /* dynamic values keybindings */
     $('#mass').on('keyup',function (){
         var val = parseFloat($(this).val());
         mass = isNaN(val)?0.9:val;
@@ -89,8 +49,8 @@ $(function (){
         drag = isNaN(val)?1:val;
     })
     
+    DEBUG = $('#debug');
     
-     DEBUG = $('#debug');
     $.getJSON('/get/'+test, function (data){
         if(data.status == 'success'){
             var ctx = new webkitAudioContext();
@@ -137,10 +97,6 @@ $(function (){
                     avg.shift();
                     avg.push(rms);
                     
-    
-                    /*value = _.reduce(avg,function (m,n){return m+n;})/filter_width;*/
-                    //value = smooth(avg);
-                    //value = rms;
                     switch(filter_width){
                         case 5:
                             value = five_pt_smooth(avg);
@@ -156,74 +112,81 @@ $(function (){
                             break;
                     }
                     
+                    /* lower  moving average */
                     if(min==0)min=value;
                     if(value < min-5 || value > min+5) min += value + min / 2;
                     
-                    //meter.style.width = ( value * 100 ) + '%';
-                    var amnt = 100;
+                    var chart_sample = 100;
                     var skip = 0;
                     var inter = 1;
                     
-                    if((LOG && idx%inter==0)){
-                        var input = (value-min) * 100;
-                        if(input-lastin > 1.0){
-                            accum += (input-lastin);
+                    if(LOG){
+                        var input = (value-min)*SCALER;
+                        // if(input-lastin > 1.0){
+                        //     accum += (input-lastin);
+                        // }
+
+                        if(input>lastin){
+                            DEBUG.css('background-color','green')
+                        }else{
+                            DEBUG.css('background-color','red')
                         }
+                        
                         lastin=input;
-                        _data.push(input>=1?input:0);
+                        
+                        chart_data.push(input>=1?input:0);
                         labels.push( idx++ );
-                        //if(idx > skip+amnt){
-                            if(idx > amnt){
-                                _data = _data.slice(1);
-                                labels = labels.slice(1);
-                            }
-                            //audio.pause();
-                            var d = {
-                                labels: labels,
-                                datasets: [
-                                    {
-                                        label: "",
-                                        fillColor: "rgba(220,220,220,0.85)",
-                                        strokeColor: "rgba(220,220,220,1)",
-                                        pointColor: "rgba(220,220,220,1)",
-                                        pointStrokeColor: "#fff",
-                                        pointHighlightFill: "#fff",
-                                        pointHighlightStroke: "rgba(220,220,220,1)",
-                                        data: _data
-                                    }
-                                ]
-                            }
-                            var myNewChart = new Chart(ctx2).Line(d,opts);
-                            //processor.onaudioprocess = null;
-                        //}
-                    }else{ 
-                        idx++;
+                        if(idx > chart_sample){
+                            chart_data = chart_data.slice(1);
+                            labels = labels.slice(1);
+                        }
+                        var d = {
+                            labels: labels,
+                            datasets: [
+                                {
+                                    label: "",
+                                    fillColor: "rgba(220,220,220,0.85)",
+                                    strokeColor: "rgba(220,220,220,1)",
+                                    pointColor: "rgba(220,220,220,1)",
+                                    pointStrokeColor: "#fff",
+                                    pointHighlightFill: "#fff",
+                                    pointHighlightStroke: "rgba(220,220,220,1)",
+                                    data: chart_data
+                                }
+                            ]
+                        }
+                        var myNewChart = new Chart(ctx2).Line(d,opts);   
                     }
                 }else{ 
                     avg.push(rms);
                 }
             }
 
-            if(!LOG || true){
+            /*
+            if(!LOG){
                 var anim = function (){
                     if((value-min)*100 >= 1)
                         window.scrollBy(0, Math.floor(accum));
-                        vel = (drag * accum)/mass;
-                        accum += vel;
-                        DEBUG.html(accum.toFixed(3));
+                    
+                    vel = (drag * accum)/mass;
+                    accum += vel;
+                    DEBUG.html(accum.toFixed(3));
+                                         
+                    if($(window).scrollTop() >= $('body').height()-window.innerHeight*1.5){
+                        window.scrollTo(0,0);
+                    }
                                              
-                        if($(window).scrollTop() >= $('body').height()-window.innerHeight*1.5){
-                            window.scrollTo(0,0);
-                        }
-                                             
-                    window.requestAnimFrame(anim);
+                    window.requestAnimationFrame(anim);
                 };
-                anim();
-            }
+                // kick off animation loop
+                window.requestAnimationFrame(anim);
+            }*/
         }
         
         $(document).on('keypress',function (evt){
-            if(evt.keyCode==32){            
+            /* pause audio stream */
+            if(evt.keyCode==32){ 
+                evt.preventDefault();
                 audio.pause();
                 processor.onaudioprocess = null;
             }
