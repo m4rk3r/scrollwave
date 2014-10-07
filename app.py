@@ -23,9 +23,15 @@ def get_vid(id):
 @app.route('/')
 def index():
     return render_template('tunes.html')
+    
+def validate(input):
+    if not re.match(r'[a-zA-Z0-9]+',input):
+        return False
+    return True
 
 @app.route('/get/<id>')
 def get_audio(id):
+    if not validate(id): return jsonify()
     if not rds.exists(RDS_KEY+str(id)) and len(id) < 20:
         rds.set(RDS_KEY+str(id),0)
         get_vid(id)
