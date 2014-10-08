@@ -11,23 +11,35 @@ STORAGE = 'static/media/'
 FILE_PATH = '/Users/mark/programming/scrollwave/'
 MEDIA_PATH = 'http://localhost:9000/static/media/'
 
-app = Flask(__name__)
+app = Flask(__name__,extra_files=os.path.join(FILE_PATH,'static/bookmark.js'))
 
 process = {}
 RDS_KEY = 'scroll.'
 rds = redis.Redis()
 
+
+"""
+~ UTILS ~
+"""
 def get_vid(id):
     process[id] = subprocess.Popen(['./youtube-dl',id,'-x','--audio-format','mp3','-o','static/%(id)s.%(ext)s'])
 
-@app.route('/')
-def index():
-    return render_template('tunes.html')
-    
 def validate(input):
     if not re.match(r'[a-zA-Z0-9]+',input):
         return False
     return True
+
+
+@app.route('/')
+def index():
+    return render_template('test.html')
+
+
+@app.route('/list/')
+def list():
+    videos = [ _.split('.')[1] for _ in rds.keys()]
+    return jsonify(videos=videos)
+
 
 @app.route('/get/<id>')
 def get_audio(id):
@@ -56,12 +68,15 @@ def get_status(id):
     return jsonify(status='success',
         file=os.path.join(MEDIA_PATH,FILE_TMPLT.format(id)))
 
+
 if __name__ == '__main__':
     # cleanup
     map(rds.delete, rds.keys(RDS_KEY+'*'))
     files = glob(os.path.join(FILE_PATH,STORAGE)+'*.mp3')
     for file in files:
         rds.set(RDS_KEY+os.path.basename(file).split('.')[0],1)
+
+    subprocess.Popen(['/Users/mark/venv/play/bin/python','mk_bookmarklet.py'])
 
     # start app
     app.run(debug=DEBUG)

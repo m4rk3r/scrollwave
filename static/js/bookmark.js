@@ -1,4 +1,4 @@
-javascript:function (){
+function (){
     function getScript(url,success){
         var script=document.createElement('script');
         script.src=url;
@@ -16,9 +16,13 @@ javascript:function (){
                 }
         };
         head.appendChild(script);
-     }   
-     
+     }
+
      getScript('http://duskjacket.com/assets/js/jquery-1.7.min.js',function (){
-         alert('hi');
+         $.getJSON('/list/',function (data){
+             conosole.log(data);
+
+             alert('hi')
+         })
      });
 }
