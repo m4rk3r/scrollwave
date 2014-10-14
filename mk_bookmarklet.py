@@ -10,7 +10,7 @@ output.write(bookmrk);
 output.close()
 
 
-html = '<html><head></head><body><a href="%s">test</a></body></html>'
+html = '<html><head></head><body><a href="%s">test</a><BR><BR><div id="result"></div></body></html>'
 html_file = open('templates/test.html','w')
 html_file.write(html % bookmrk)
 html_file.close()
