@@ -32,7 +32,7 @@ def validate(input):
 
 def unpack_url(id):
     result = re.search(
-        r'((?<=youtu.be/)|(?<=youtube.com/watch\?v=))[a-zA-Z0-9-]+',
+        r'((?<=youtu.be/)|(?<=youtube.com/watch\?v=))[a-zA-Z0-9-_]+',
         id)
     if result: return result.group(0)
     else: return ''
