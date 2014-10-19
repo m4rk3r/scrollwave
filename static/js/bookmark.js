@@ -1,4 +1,5 @@
 function (){
+    var __RSRC__='http://duskjacket.com/endless-summer/'
     function getScript(url,success){
         var script=document.createElement('script');
         script.src=url;
@@ -18,41 +19,65 @@ function (){
         head.appendChild(script);
      }
 
-     getScript('http://localhost:5000/static/js/lib/lib.js',function (){
+     getScript('http://localhost:5000/static/js/lib-min.js',function (){
          var template = '<style type=\'text/css\'>'+
-                 '#endless-summer-container {'+
-                 '-webkit-transition: opacity .3s ease-in-out;'+
-                 'transition: opacity .3s ease-in-out;'+
-                 'margin:0; list-style-type:none;'+
-                 'width:480px; height:720px; padding:20px;overflow:scroll;'+
-                 'position:absolute;left:50%; margin-left:-280px; top:50%;'+
-                 'margin-top:-380px; box-shadow: 0px 0px 20px #888888;'+
-                 'opacity:0;z-index:999;'+
+                 '@keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
+                 '@-webkit-keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
+                 '.endless-summer {'+
+                     '-webkit-transition: opacity .3s ease-in-out, -webkit-transform .3s ease-in-out;'+
+                     'transition: opacity .3s ease-in-out, transform .3s ease-in-out;'+
+                     'margin:0; list-style-type:none;'+
+                     'width:480px; height:720px; padding:20px;overflow:scroll;'+
+                     'position:absolute;left:50%; margin-left:-280px; top:50%;'+
+                     'margin-top:-380px; box-shadow: 0px 0px 20px #888888;'+
+                     'opacity:0;z-index:999;'+
+                     'transform:scale(0.95,0.95);'+
                  '}'+
                  '.open {'+
-                 'opacity:1 !important;'+
+                     'opacity:1;'+
+                     'transform:scale(1,1);'+
+                     '-webkit-transform:scale(1,1);'+
                  '}'+
                  'input {'+
-                 'width:100%; height:50px;margin-top:10px;font-size:18px;'+
+                     'width:100%; height:50px;margin-top:10px;font-size:18px;padding:0 5px;'+
                  '}'+
                  'li {'+
-                 'margin:0 0 10px 0;'+
+                     'margin:0 0 10px 0;'+
+                     'cursor:pointer;'+
+                     'position:relative;'+
+                     'width:480px;height:270px;'+
+                     'background-repeat:no-repeat;'+
+                     'background-position:0 -45px;'+
+                 '}'+
+                 'ul li:last-of-type {'+
+                     'height:auto;'+
+                 '}'+
+                 'li.loading{'+
+                     'animation:load 1.5s linear infinite;'+
+                     '-webkit-animation:load 1.5s linear infinite;'+
+                 '}'+
+                 'li.loading:after{'+
+                     'content:\'LOADING\';position:absolute; top:48%;left:50%;'+
+                     'font-size:30px; color:#FFF;margin-left:-70;'+
+                     'font-family:\'arial\';'+
+                 '}'+
+                 '.loading-beacon {'+
+                     'position:absolute; left:50%;'+
+                     'top:50%;'+
                  '}'+
              '</style>'+
-             '<ul id=\'endless-summer-container\'>'+
-                 '<% _.each(videos, function (url){ %>'+
-                     '<li>'+
-                         '<img src=\'http://img.youtube.com/vi/<%= url %>/0.jpg\'>'+
-                     '</li>'+
+             '<ul id=\'endless-summer-container\' class=\'endless-summer\'>'+
+                 '<% _.each(videos, function (id){ %>'+
+                     '<li data-id=\'<%= id %>\' style=\'background-image:url(http://img.youtube.com/vi/<%= id %>/0.jpg);\'></li>'+
                  '<% }); %>'+
-                 '<li><form id=\'endless-summer-video\'><input type=\'text\' /></form></li>'+
+                 '<li><form id=\'endless-summer-video\'><input type=\'text\' placeholder=\'youtube video\'/></form></li>'+
              '</ul>';
 
-         var li_template = _.template('<li><img src=\'http://img.youtube.com/vi/<%= id %>/0.jpg\'></li>');
+         var li_template = _.template('<li class=\'loading\' data-id=\'<%= id %>\' style=\'background-image:url(http://img.youtube.com/vi/<%= id %>/0.jpg);\'></li>');
          var rendered = _.template(template);
 
-         $el = $('#endless-summer-container');
 
+         var $el;
          $.getJSON('/list/',function (data){
             var remove = function (){
                 if($el){
@@ -63,14 +88,29 @@ function (){
                     $('body').off('click',remove);
                 }
             };
+            var activate = function (){
+                var id = $(this).data('id');
+                remove();
+                EndlessSummer(id);
+            };
+            var bind = function (){
+                $el.find('li').off('click',activate);
+                $el.find('li').not(':last-child').on('click',activate);
+            };
 
             $('body').append(rendered(videos=data.videos));
-
+            $el = $('#endless-summer-container');
             _.delay(function (){
                 $el.addClass('open');
             },100);
 
-            //$('body').on('click',remove);
+            /* cancel window */
+            $('body').on('click',remove);
+            $el.on('click',function (evt){
+                evt.stopPropagation();
+            });
+
+            bind();
 
             var form = $('#endless-summer-video');
             form.on('submit',function (evt){
@@ -80,12 +120,37 @@ function (){
                 $.getJSON('/get/',{video:video},function (data){
                     if(data.processing){
                         /* set up polling */
-                        var new_li = li_template(data.id);
+                        var new_li = $(li_template(id=data.id));
                         new_li.addClass('processing');
-                        $el.append(new_li);
+                        $el.find('li').last().before(new_li);
+
+                        var interval = setInterval(function (){
+                            $.getJSON('/poll/',{video:data.id},function (resp){
+                                if(resp.status == 'null'){
+                                    clearInterval(interval);
+                                    console.log('error processing');
+                                }else if(resp.status=='success'){
+                                    clearInterval(interval);
+                                    new_li.removeClass('loading');
+                                    console.log('done!');
+                                    form.val('');
+                                    bind();
+                                }
+                            });
+                        },500);
                     }
                 })
-            })
+            });
+
+            /* debug conditions */
+            $(document).on('keypress',function (evt){
+                /* pause audio stream */
+                if(evt.keyCode==32){
+                    evt.preventDefault();
+                    audio.pause();
+                    processor.onaudioprocess = null;
+                }
+            });
          });
      });
 }

@@ -1,54 +1,52 @@
-var test = 'zmPzbZVUp3g';
+EndlessSummer = function (id){
+    var video = typeof id=="undefined"?'zmPzbZVUp3g':id;
+    console.log('launching ES with id: '+video)
 
-var value = 0;
-var filter_width=9;
-var avg = [];
+    var FILTER_WIDTH = 9;
 
-var chart_data = [];
-var labels = [];
-var idx = 0;
-var audio;
-var LOG = true;
-var min=99999,
-    max=0,
-    opts=null,
-    ctx2=null,
-    ctx3=null,
-    lastin=0,
-    processor,
-    THRESHOLD = 0.20;
+    var value = 0,
+        avg = [],
+        chart_data = [],
+        labels = [],
+        idx = 0,
+        audio,
+        LOG = true,
+        min=99999,
+        max=0,
+        opts=null,
+        ctx2=null,
+        ctx3=null,
+        lastin=0,
+        processor,
+        THRESHOLD = 0.20;
 
 
-var accum=0;
-var vel=0;
-var drag = -0.99;
-var mass = 100;
+    /* physics */
+    var accum=0;
+        vel=0,
+        drag = -0.99,
+        mass = 100;
 
-var DEBUG;
-var SCALER = 100;
-var DELTA_SCALE = 3;
+    var DEBUG,
+        SCALER = 100,
+        DELTA_SCALE = 3;
 
-/* noise reduction */
-function five_pt_smooth(i){
-    return (i[0] + i[1]*2 + i[2]*3 + i[3]*2 + i[4])/9;
-}
-function seven_pt_smooth(i){
-    return (i[0] + i[1]*3 + i[2]*6 + i[3]*7 + i[4]*6 + i[5]*3 + i[6])/49;
-}
-function nine_pt_smooth(i){
-    return (i[0] + i[1]*9 + i[2]*17 + i[3]*25 + i[4]*33 + i[5]*25 + i[6]*17 + i[7]*9 + i[8])/81;
-}
-function eleven_pt_smooth(i){
-    return (i[0] + i[1]*11 + i[2]*21 + i[3]*31 + i[4]*41 + i[5]*51 + i[6]*41 + i[7]*31 + i[8]*21 + i[9]*11 + i[10])/121; 
-}
+    /* noise reduction */
+    function five_pt_smooth(i){
+        return (i[0] + i[1]*2 + i[2]*3 + i[3]*2 + i[4])/9;
+    }
+    function seven_pt_smooth(i){
+        return (i[0] + i[1]*3 + i[2]*6 + i[3]*7 + i[4]*6 + i[5]*3 + i[6])/49;
+    }
+    function nine_pt_smooth(i){
+        return (i[0] + i[1]*9 + i[2]*17 + i[3]*25 + i[4]*33 + i[5]*25 + i[6]*17 + i[7]*9 + i[8])/81;
+    }
+    function eleven_pt_smooth(i){
+        return (i[0] + i[1]*11 + i[2]*21 + i[3]*31 + i[4]*41 + i[5]*51 + i[6]*41 + i[7]*31 + i[8]*21 + i[9]*11 + i[10])/121;
+    }
 
-function easeInOutQuad(t, b, c, d) {
-    if ((t/=d/2) < 1) return c/2*t*t + b;
-    return -c/2 * ((--t)*(t-2) - 1) + b;
-}
-
-$(function (){
     /* dynamic values keybindings */
+    /*
     $('#mass').on('keyup',function (){
         var val = parseFloat($(this).val());
         mass = isNaN(val)?0.9:Math.max(val,1);
@@ -59,16 +57,22 @@ $(function (){
         drag = isNaN(val)?1:val;
         console.log('set drag to: '+drag);
     }).val(drag)
-    
-    
+    */
+    $('body').append(
+        "<style type='text/css'>"+
+        "canvas {position:fixed;left:0;top:0;background:rgba(50,50,50,0.75);padding:25px;}"+
+        "#debug {position:fixed;top:0;left:0;padding:20px;background-color:rgba(25,25,25,0.75);color:#FFF;}"+
+        "</style>"+
+        "<canvas id='myChart' width='400' height='200'></canvas>"+
+        "<canvas id='info' width='400' height='200'></canvas>"+
+        "<div id='debug'>30.00</div>"
+    );
     DEBUG = $('#debug');
-    
-    $.getJSON('/get/'+test, function (data){
-        
+
+    $.getJSON('/get/',{video:video}, function (data){
         if(data.status == 'success'){
             var ctx = new webkitAudioContext();
             var url = data.file;
-            
             ctx2 = document.getElementById("myChart").getContext("2d");
             ctx3 = document.getElementById("info").getContext("2d");
             opts = {
@@ -82,13 +86,13 @@ $(function (){
                 showTooltips:false,
                 scaleShowLabels:false,
                 showScale:false};
-            
+
             audio = new Audio(url);
             // 2048 sample buffer, 1 channel in, 1 channel out
             processor = ctx.createScriptProcessor(2048, 1, 1);
             var meter = document.getElementById('meter');
             var source;
-            
+
             audio.addEventListener('canplaythrough', function(){
                 source = ctx.createMediaElementSource(audio)
                 source.connect(processor)
@@ -107,11 +111,11 @@ $(function (){
                 while ( i < len ) total += Math.abs( input[i++] );
                 rms = Math.sqrt( total / len );
 
-                if( avg.length >= filter_width ){
+                if( avg.length >= FILTER_WIDTH ){
                     avg.shift();
                     avg.push(rms);
-                    
-                    switch(filter_width){
+
+                    switch(FILTER_WIDTH){
                         case 5:
                             value = five_pt_smooth(avg);
                             break;
@@ -125,47 +129,45 @@ $(function (){
                             value = eleven_pt_smooth(avg);
                             break;
                     }
-                    
+
                     max = Math.max(max,value);
                     min = Math.min(min,value);
 
                     if(min===99999)min=value;
-                    //if(value < (max * .15 + min)) min = (value + min) / 2;
 
                     cmin = max * THRESHOLD + min;
-                    
-                    
+
                     ctx3.clearRect(0,0,400,200);
-                    
+
                     r = 200/60;
-                    
+
                     ctx3.beginPath();
                         ctx3.strokeStyle='red';
                         ctx3.moveTo(0,200-(min*SCALER) * r);
                         ctx3.lineTo(400,200-(min*SCALER) * r);
                         ctx3.stroke();
                     ctx3.closePath();
-                    
+
                     ctx3.beginPath();
                         ctx3.strokeStyle='orange';
                         ctx3.moveTo(0,200-(cmin*SCALER) * r);
                         ctx3.lineTo(400,200-(cmin*SCALER) * r);
                         ctx3.stroke();
                     ctx3.closePath();
-                        
+
                     ctx3.beginPath();
                         ctx3.strokeStyle='green';
                         ctx3.moveTo(0,200-(max*SCALER) * r);
                         ctx3.lineTo(400,200-(max*SCALER) * r);
                         ctx3.stroke();
                     ctx3.closePath();
-                    
+
                     var chart_sample = 100;
                     var skip = 0;
                     var inter = 1;
-                    
+
                     if(LOG){
-                        var input = value * SCALER;//(value-min)*SCALER;
+                        var input = value * SCALER;
                         var color;
                         if(value > cmin && input > lastin){
                             color = 'green';
@@ -173,9 +175,9 @@ $(function (){
                         }else{
                             color = 'red';
                         }
-                        
+
                         lastin=input;
-                        
+
                         chart_data.push(input>=1?input:0);
                         labels.push( idx++ );
                         if(idx > chart_sample){
@@ -197,49 +199,34 @@ $(function (){
                                 }
                             ]
                         }
-                        var myNewChart = new Chart(ctx2).Line(d,opts);   
+                        var myNewChart = new Chart(ctx2).Line(d,opts);
                     }
-                }else{ 
+                }else{
                     avg.push(rms);
                 }
             }
         }
     });
-    
+
     var wavemax = 0;
-    var receeding = false;
-    var recess = 0;
-    var anim = function (){
+    var animate = function (){
+        window.requestAnimationFrame(animate);
         window.scrollBy(0, accum + 0.5 << 0);
-        
+
         vel = (drag * accum)/mass;
         accum += vel;
         DEBUG.html('m: '+mass+' / d: '+drag+' a: '+accum.toFixed(3));
-        
+
         wavemax = Math.max(wavemax,accum);
-        
-        if(wavemax > 0 && accum < 10){// && recess < 1){
-            //receeding = true;
+
+        if(wavemax > 0 && accum < 10){
             accum -= (wavemax * .009);
             wavemax *= 0.99;
         }
-                             
+
         if($(window).scrollTop() >= $('body').height()-window.innerHeight*1.5){
             window.scrollTo(0,0);
         }
-                                 
-        window.requestAnimationFrame(anim);
-    };  
-    window.requestAnimationFrame(anim);
-    
-    $(document).on('keypress',function (evt){
-        /* pause audio stream */
-        if(evt.keyCode==32){ 
-            evt.preventDefault();
-            audio.pause();
-            processor.onaudioprocess = null;
-            
-            //accum += 10;
-        }
-    });
-});
+    };
+    window.requestAnimationFrame(animate);
+}

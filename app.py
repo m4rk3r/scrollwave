@@ -30,6 +30,11 @@ def validate(input):
         return False
     return True
 
+def validate_id(input):
+    if re.match(r'[a-zA-Z0-9-_]+',input):
+        return re.match(r'[a-zA-Z0-9-_]+',input).group()
+    return None
+
 def unpack_url(id):
     result = re.search(
         r'((?<=youtu.be/)|(?<=youtube.com/watch\?v=))[a-zA-Z0-9-_]+',
@@ -51,27 +56,30 @@ def list():
 @app.route('/get/')
 def get_audio():
     id = request.args.get('video','')
-    if not validate(id): return jsonify()
-    id = unpack_url(id)
+    if not validate(id) and not validate_id(id): return jsonify()
+    id = unpack_url(id) or validate_id(id)
     if not id: return jsonify()
 
     if not rds.exists(RDS_KEY+id) and len(id) < 20:
         rds.set(RDS_KEY+id,0)
         get_vid(id)
-        return redirect('/poll/'+id)
+        return jsonify(processing=True,id=id)
     elif rds.get(RDS_KEY+id) == '0':
-        return redirect(url_for('/poll/'+id))
+        return jsonify(processing=True,id=id)
     return jsonify(status='success',
         file=os.path.join(MEDIA_PATH,FILE_TMPLT.format(id)))
 
 
-@app.route('/poll/<id>')
-def get_status(id):
+@app.route('/poll/')
+def get_status():
+    id = validate_id(request.args.get('video',''))
+    if not id: return jsonify(status='null')
+
     if rds.get(RDS_KEY+id) == '1':
         return jsonify(status='success',
             file=os.path.join(MEDIA_PATH,FILE_TMPLT.format(id)),
             id=id)
-    if process.get(id,None) is None: return 'null'
+    if process.get(id,None) is None: return jsonify(status='null')
     if subprocess.Popen.poll(process.get(id,None)) is None:
         return jsonify(status='processing',id=id)
     rds.set(RDS_KEY+id,1)

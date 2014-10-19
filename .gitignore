@@ -3,4 +3,5 @@
 
 storage
 *.mp3
+*.pyc
 static/media
