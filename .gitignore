@@ -4,4 +4,5 @@
 storage
 *.mp3
 *.pyc
+*.rdb
 static/media
