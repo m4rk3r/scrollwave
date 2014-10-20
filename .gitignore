@@ -6,3 +6,5 @@ storage
 *.pyc
 *.rdb
 static/media
+
+local_settings.py
