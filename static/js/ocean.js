@@ -69,7 +69,7 @@ EndlessSummer = function (id,url){
     );
     DEBUG = $('#debug');
 
-    $.getJSON(__URL__+'/get/',{video:video}, function (data){
+    $.getJSON(URL+'get/',{video:video}, function (data){
         if(data.status == 'success'){
             var ctx = new webkitAudioContext();
             var url = data.file;

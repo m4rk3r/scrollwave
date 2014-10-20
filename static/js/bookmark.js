@@ -78,7 +78,7 @@ function (){
 
 
          var $el;
-         $.getJSON(URL+'/list/',function (data){
+         $.getJSON(URL+'list/',function (data){
             var remove = function (){
                 if($el){
                     $el.removeClass('open');
@@ -117,7 +117,7 @@ function (){
                 evt.preventDefault();
                 var video = form.find('input[type=text]').val();
 
-                $.getJSON(URL+'/get/',{video:video},function (data){
+                $.getJSON(URL+'get/',{video:video},function (data){
                     if(data.processing){
                         /* set up polling */
                         var new_li = $(li_template(id=data.id));
@@ -125,7 +125,7 @@ function (){
                         $el.find('li').last().before(new_li);
 
                         var interval = setInterval(function (){
-                            $.getJSON(URL+'/poll/',{video:data.id},function (resp){
+                            $.getJSON(URL+'poll/',{video:data.id},function (resp){
                                 if(resp.status == 'null'){
                                     clearInterval(interval);
                                     console.log('error processing');
