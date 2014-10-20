@@ -32,13 +32,13 @@ def validate(input):
     return True
 
 def validate_id(input):
-    if re.match(r'[a-zA-Z0-9-_]+',input):
-        return re.match(r'[a-zA-Z0-9-_]+',input).group()
+    if re.search(r'[a-zA-Z0-9-_]{11}',input):
+        return re.search(r'[a-zA-Z0-9-_]{11}',input).group()
     return None
 
 def unpack_url(id):
     result = re.search(
-        r'((?<=youtu.be/)|(?<=youtube.com/watch\?v=))[a-zA-Z0-9-_]+',
+        r'((?<=youtu.be/)|(?<=youtube.com/watch\?v=))[a-zA-Z0-9-_]{11}',
         id)
     if result: return result.group(0)
     else: return ''
