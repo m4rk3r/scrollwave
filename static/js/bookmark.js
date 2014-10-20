@@ -1,5 +1,4 @@
 function (){
-    var __RSRC__='http://duskjacket.com/endless-summer/'
     function getScript(url,success){
         var script=document.createElement('script');
         script.src=url;
@@ -20,6 +19,7 @@ function (){
      }
 
      getScript('http://localhost:5000/static/js/lib-min.js',function (){
+         var URL='http://duskjacket.com/endless-summer/';
          var template = '<style type=\'text/css\'>'+
                  '@keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
                  '@-webkit-keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
@@ -78,7 +78,7 @@ function (){
 
 
          var $el;
-         $.getJSON('/list/',function (data){
+         $.getJSON(URL+'/list/',function (data){
             var remove = function (){
                 if($el){
                     $el.removeClass('open');
@@ -91,7 +91,7 @@ function (){
             var activate = function (){
                 var id = $(this).data('id');
                 remove();
-                EndlessSummer(id);
+                EndlessSummer(id,URL);
             };
             var bind = function (){
                 $el.find('li').off('click',activate);
@@ -117,7 +117,7 @@ function (){
                 evt.preventDefault();
                 var video = form.find('input[type=text]').val();
 
-                $.getJSON('/get/',{video:video},function (data){
+                $.getJSON(URL+'/get/',{video:video},function (data){
                     if(data.processing){
                         /* set up polling */
                         var new_li = $(li_template(id=data.id));
@@ -125,7 +125,7 @@ function (){
                         $el.find('li').last().before(new_li);
 
                         var interval = setInterval(function (){
-                            $.getJSON('/poll/',{video:data.id},function (resp){
+                            $.getJSON(URL+'/poll/',{video:data.id},function (resp){
                                 if(resp.status == 'null'){
                                     clearInterval(interval);
                                     console.log('error processing');

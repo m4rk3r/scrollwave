@@ -1,6 +1,6 @@
-EndlessSummer = function (id){
+EndlessSummer = function (id,url){
     var video = typeof id=="undefined"?'zmPzbZVUp3g':id;
-    console.log('launching ES with id: '+video)
+    var URL = url;
 
     var FILTER_WIDTH = 9;
 
@@ -69,7 +69,7 @@ EndlessSummer = function (id){
     );
     DEBUG = $('#debug');
 
-    $.getJSON('/get/',{video:video}, function (data){
+    $.getJSON(__URL__+'/get/',{video:video}, function (data){
         if(data.status == 'success'){
             var ctx = new webkitAudioContext();
             var url = data.file;
