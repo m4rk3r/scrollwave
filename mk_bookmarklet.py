@@ -2,6 +2,7 @@ from os.path import join
 from re import sub
 
 from rjsmin import jsmin
+from settings import URL
 
 js = 'static/js/'
 
@@ -11,6 +12,7 @@ js = 'static/js/'
 file = open(join(js,'bookmark.js'),'r').read()
 output = open(join(js,'compiled.js'),'w')
 bookmrk = 'javascript:('+jsmin(file)+')();';
+bookmrk = sub(r'__URL__',URL,bookmrk)
 output.write(bookmrk);
 output.close()
 

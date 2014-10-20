@@ -6,15 +6,13 @@ from glob import glob
 import redis
 from flask import Flask, redirect, url_for, jsonify, render_template, request
 
-from settings import URL
+from settings import URL, FILE_PATH
 
 DEBUG = True
 FILE_TMPLT = '{0}.mp3'
 STATIC = 'static/'
 STORAGE = 'static/media/'
-FILE_PATH = '/var/sites/endless_summer/'
 MEDIA_PATH = os.path.join(URL,STORAGE)
-
 app = Flask(__name__)
 
 process = {}

@@ -1,4 +1,4 @@
-FILE_PATH = '/Users/mark/programming/scrollwave/'
+FILE_PATH = '/var/sites/endless_summer/'
 URL = 'http://duskjacket.com/endless-summer/'
 
 try:

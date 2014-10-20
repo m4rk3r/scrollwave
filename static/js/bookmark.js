@@ -18,8 +18,8 @@ function (){
         head.appendChild(script);
      }
 
-     getScript('http://localhost:5000/static/js/lib-min.js',function (){
-         var URL='http://duskjacket.com/endless-summer/';
+     getScript('__URL__static/js/lib-min.js',function (){
+         var URL='__URL__';
          var template = '<style type=\'text/css\'>'+
                  '@keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
                  '@-webkit-keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
