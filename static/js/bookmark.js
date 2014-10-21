@@ -121,7 +121,6 @@ function (){
                     if(data.processing){
                         /* set up polling */
                         var new_li = $(li_template(id=data.id));
-                        new_li.addClass('processing');
                         $el.find('li').last().before(new_li);
 
                         var interval = setInterval(function (){
