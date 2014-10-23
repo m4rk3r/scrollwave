@@ -18,7 +18,8 @@ EndlessSummer = function (id,url){
         ctx3=null,
         lastin=0,
         processor,
-        THRESHOLD = 0.20;
+        THRESHOLD = 0.20,
+        chart = null;
 
 
     /* physics */
@@ -199,7 +200,11 @@ EndlessSummer = function (id,url){
                                 }
                             ]
                         }
-                        var myNewChart = new Chart(ctx2).Line(d,opts);
+                        if(typeof chart == "null"){
+                            chart = new Chart(ctx2).Line(d,opts);
+                        }else{
+                            chart.Line(d,opts);
+                        }
                     }
                 }else{
                     avg.push(rms);
