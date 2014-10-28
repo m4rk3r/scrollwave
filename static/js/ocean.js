@@ -200,8 +200,9 @@ EndlessSummer = function (id,url){
                                 }
                             ]
                         }
-                        if(typeof chart == "null"){
-                            chart = new Chart(ctx2).Line(d,opts);
+                        if(chart === null){
+                            chart = new Chart(ctx2);
+                            chart.Line(d,opts);
                         }else{
                             chart.Line(d,opts);
                         }

@@ -11,4 +11,5 @@ local_settings.py
 
 templates/test.html
 static/js/compiled.js
+static/js/ocean-min.js
 static/js/lib-min.js
