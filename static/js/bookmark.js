@@ -28,10 +28,11 @@ function (){
                      'transition: opacity .3s ease-in-out, transform .3s ease-in-out;'+
                      'margin:0; list-style-type:none;'+
                      'width:480px; height:720px; padding:20px;overflow:scroll;'+
-                     'position:absolute;left:50%; margin-left:-280px; top:50%;'+
+                     'position:fixed;left:50%; margin-left:-280px; top:50%;'+
                      'margin-top:-380px; box-shadow: 0px 0px 20px #888888;'+
                      'opacity:0;z-index:999;'+
                      'transform:scale(0.95,0.95);'+
+                     'background:#FFF'+
                  '}'+
                  '.open {'+
                      'opacity:1;'+
