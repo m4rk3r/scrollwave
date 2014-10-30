@@ -27,9 +27,9 @@ function (){
                      '-webkit-transition: opacity .3s ease-in-out, -webkit-transform .3s ease-in-out;'+
                      'transition: opacity .3s ease-in-out, transform .3s ease-in-out;'+
                      'margin:0; list-style-type:none;'+
-                     'width:480px; height:720px; padding:20px;overflow:scroll;'+
+                     'width:480px; height:680px; padding:20px;overflow:scroll;'+
                      'position:fixed;left:50%; margin-left:-280px; top:50%;'+
-                     'margin-top:-380px; box-shadow: 0px 0px 20px #888888;'+
+                     'margin-top:-350px; box-shadow: 0px 0px 20px #888888;'+
                      'opacity:0;z-index:999;'+
                      'transform:scale(0.95,0.95);'+
                      'background:#FFF'+
@@ -69,12 +69,12 @@ function (){
              '</style>'+
              '<ul id=\'endless-summer-container\' class=\'endless-summer\'>'+
                  '<% _.each(videos, function (id){ %>'+
-                     '<li data-id=\'<%= id %>\' style=\'background-image:url(http://img.youtube.com/vi/<%= id %>/0.jpg);\'></li>'+
+                     '<li data-id=\'<%= id %>\' style=\'background-image:url(https://img.youtube.com/vi/<%= id %>/0.jpg);\'></li>'+
                  '<% }); %>'+
                  '<li><form id=\'endless-summer-video\'><input type=\'text\' placeholder=\'youtube video\'/></form></li>'+
              '</ul>';
 
-         var li_template = _.template('<li class=\'loading\' data-id=\'<%= id %>\' style=\'background-image:url(http://img.youtube.com/vi/<%= id %>/0.jpg);\'></li>');
+         var li_template = _.template('<li class=\'loading\' data-id=\'<%= id %>\' style=\'background-image:url(https://img.youtube.com/vi/<%= id %>/0.jpg);\'></li>');
          var rendered = _.template(template);
 
 
