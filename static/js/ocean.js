@@ -1,238 +1,223 @@
-EndlessSummer = function (id,url){
-    var video = typeof id=="undefined"?'zmPzbZVUp3g':id;
-    var URL = url;
-
-    var FILTER_WIDTH = 9;
-
-    var value = 0,
-        avg = [],
-        chart_data = [],
-        labels = [],
-        idx = 0,
-        audio,
-        LOG = true,
-        min=99999,
-        max=0,
-        opts=null,
-        ctx2=null,
-        ctx3=null,
-        lastin=0,
-        processor,
-        THRESHOLD = 0.20,
-        chart = null;
-
+EndlessSummer = {
+    avg : [],
+    chart_data : [],
+    labels : [],
+    idx : 0,
+    LOG : true,
+    min:99999,
+    max:0,
+    opts:null,
+    ctx2:null,
+    ctx3:null,
+    lastin:0,
+    THRESHOLD : 0.20,
+    chart : null,
+    wavemax : 0,
 
     /* physics */
-    var accum=0;
-        vel=0,
-        drag = -0.99,
-        mass = 100;
+    accum:0,
+    vel:0,
+    drag: -0.99,
+    mass: 100,
 
-    var DEBUG,
-        SCALER = 100,
-        DELTA_SCALE = 3;
+    SCALER: 100,
+    DELTA_SCALE: 3,
+    FILTER_WIDTH:9,
 
-    /* noise reduction */
-    function five_pt_smooth(i){
-        return (i[0] + i[1]*2 + i[2]*3 + i[3]*2 + i[4])/9;
-    }
-    function seven_pt_smooth(i){
-        return (i[0] + i[1]*3 + i[2]*6 + i[3]*7 + i[4]*6 + i[5]*3 + i[6])/49;
-    }
-    function nine_pt_smooth(i){
+    $w: $(window),
+    $body: $('body'),
+
+    opts: {
+        scaleShowLabels:false,
+        pointDotRadius : 1,
+        animation:false,
+        scaleOverride:true,
+        scaleSteps:60,
+        scaleStepWidth:1,
+        scaleStartValue:0,
+        showTooltips:false,
+        scaleShowLabels:false,
+        showScale:false
+    },
+
+    init: function (id,url){
+        this.video = typeof id=="undefined"?'zmPzbZVUp3g':id;
+        this.URL = url;
+
+        $('body').append(
+            "<style type='text/css'>"+
+            "canvas {position:fixed;left:0;top:0;background:rgba(50,50,50,0.75);padding:25px;}"+
+            "#debug {position:fixed;top:0;left:0;padding:20px;background-color:rgba(25,25,25,0.75);color:#FFF;}"+
+            "</style>"+
+            "<canvas id='myChart' width='400' height='200'></canvas>"+
+            "<canvas id='info' width='400' height='200'></canvas>"+
+            "<div id='debug'>30.00</div>"
+        );
+        this.DEBUG = $('#debug');
+
+        this.load();
+        //window.requestAnimationFrame(this.animate);
+    },
+
+    filter: function (i) {
         return (i[0] + i[1]*9 + i[2]*17 + i[3]*25 + i[4]*33 + i[5]*25 + i[6]*17 + i[7]*9 + i[8])/81;
-    }
-    function eleven_pt_smooth(i){
-        return (i[0] + i[1]*11 + i[2]*21 + i[3]*31 + i[4]*41 + i[5]*51 + i[6]*41 + i[7]*31 + i[8]*21 + i[9]*11 + i[10])/121;
-    }
+    },
 
-    /* dynamic values keybindings */
-    /*
-    $('#mass').on('keyup',function (){
-        var val = parseFloat($(this).val());
-        mass = isNaN(val)?0.9:Math.max(val,1);
-        console.log('set mass to: '+mass);
-    }).val(mass);
-    $('#drag').on('keyup',function (){
-        var val = parseFloat($(this).val());
-        drag = isNaN(val)?1:val;
-        console.log('set drag to: '+drag);
-    }).val(drag)
-    */
-    $('body').append(
-        "<style type='text/css'>"+
-        "canvas {position:fixed;left:0;top:0;background:rgba(50,50,50,0.75);padding:25px;}"+
-        "#debug {position:fixed;top:0;left:0;padding:20px;background-color:rgba(25,25,25,0.75);color:#FFF;}"+
-        "</style>"+
-        "<canvas id='myChart' width='400' height='200'></canvas>"+
-        "<canvas id='info' width='400' height='200'></canvas>"+
-        "<div id='debug'>30.00</div>"
-    );
-    DEBUG = $('#debug');
+    load: function (){
+        var self=this;
+        _req(this.URL+'get/',{video:this.video},function (data){
+            self.run(data);
+        });
+    },
 
-    $.getJSON(URL+'get/',{video:video}, function (data){
+    _debug: function (_ctx){
+        _ctx.clearRect(0,0,400,200);
+        var r = 200/60;
+        _ctx.beginPath();
+            _ctx.strokeStyle='red';
+            _ctx.moveTo(0,200-(this.min*this.SCALER) * r);
+            _ctx.lineTo(400,200-(this.min*this.SCALER) * r);
+            _ctx.stroke();
+        _ctx.closePath();
+
+        _ctx.beginPath();
+            _ctx.strokeStyle='orange';
+            _ctx.moveTo(0,200-(this.cmin*this.SCALER) * r);
+            _ctx.lineTo(400,200-(this.cmin*this.SCALER) * r);
+            _ctx.stroke();
+        _ctx.closePath();
+
+        _ctx.beginPath();
+            _ctx.strokeStyle='green';
+            _ctx.moveTo(0,200-(this.max*this.SCALER) * r);
+            _ctx.lineTo(400,200-(this.max*this.SCALER) * r);
+            _ctx.stroke();
+        _ctx.closePath();
+    },
+
+    run: function (data){
         if(data.status == 'success'){
             var ctx = new webkitAudioContext();
             var url = data.file;
-            ctx2 = document.getElementById("myChart").getContext("2d");
-            ctx3 = document.getElementById("info").getContext("2d");
-            opts = {
-                scaleShowLabels:false,
-                pointDotRadius : 1,
-                animation:false,
-                scaleOverride:true,
-                scaleSteps:60,
-                scaleStepWidth:1,
-                scaleStartValue:0,
-                showTooltips:false,
-                scaleShowLabels:false,
-                showScale:false};
+            var ctx2 = document.getElementById("myChart").getContext("2d");
+            var ctx3 = document.getElementById("info").getContext("2d");
 
-            audio = new Audio(url);
-            // 2048 sample buffer, 1 channel in, 1 channel out
-            processor = ctx.createScriptProcessor(2048, 1, 1);
-            var meter = document.getElementById('meter');
-            var source;
+            this.audio = new Audio(url);
+            this.processor = ctx.createScriptProcessor(2048, 1, 1);
 
-            audio.addEventListener('canplaythrough', function(){
-                source = ctx.createMediaElementSource(audio)
-                source.connect(processor)
-                source.connect(ctx.destination)
-                processor.connect(ctx.destination)
-                audio.play()
+            var self = this;
+            this.audio.addEventListener('canplaythrough', function(){
+                self.source = ctx.createMediaElementSource(self.audio)
+                self.source.connect(self.processor)
+                self.source.connect(ctx.destination)
+                self.processor.connect(ctx.destination)
+                self.audio.play()
             }, false);
 
-            // loop through PCM data and calculate average
-            // volume for a given 2048 sample buffer
-            processor.onaudioprocess = function(evt){
+            this.processor.onaudioprocess = function(evt){
                 var input = evt.inputBuffer.getChannelData(0)
                   , len = input.length
                   , total = i = 0
                   , rms
+                  , value;
                 while ( i < len ) total += Math.abs( input[i++] );
                 rms = Math.sqrt( total / len );
 
-                if( avg.length >= FILTER_WIDTH ){
-                    avg.shift();
-                    avg.push(rms);
+                if( self.avg.length >= self.FILTER_WIDTH ){
+                    self.avg.shift();
+                    self.avg.push(rms);
 
-                    switch(FILTER_WIDTH){
-                        case 5:
-                            value = five_pt_smooth(avg);
-                            break;
-                        case 7:
-                            value = seven_pt_smooth(avg);
-                            break;
-                        case 9:
-                            value = nine_pt_smooth(avg);
-                            break;
-                        case 11:
-                            value = eleven_pt_smooth(avg);
-                            break;
-                    }
+                    value = self.filter(self.avg);
 
-                    max = Math.max(max,value);
-                    min = Math.min(min,value);
+                    self.max = Math.max(self.max,value);
+                    self.min = Math.min(self.min,value);
 
-                    if(min===99999)min=value;
+                    if(self.min===99999)self.min=value;
 
-                    cmin = max * THRESHOLD + min;
+                    self.cmin = self.max * self.THRESHOLD + self.min;
 
-                    ctx3.clearRect(0,0,400,200);
-
-                    r = 200/60;
-
-                    ctx3.beginPath();
-                        ctx3.strokeStyle='red';
-                        ctx3.moveTo(0,200-(min*SCALER) * r);
-                        ctx3.lineTo(400,200-(min*SCALER) * r);
-                        ctx3.stroke();
-                    ctx3.closePath();
-
-                    ctx3.beginPath();
-                        ctx3.strokeStyle='orange';
-                        ctx3.moveTo(0,200-(cmin*SCALER) * r);
-                        ctx3.lineTo(400,200-(cmin*SCALER) * r);
-                        ctx3.stroke();
-                    ctx3.closePath();
-
-                    ctx3.beginPath();
-                        ctx3.strokeStyle='green';
-                        ctx3.moveTo(0,200-(max*SCALER) * r);
-                        ctx3.lineTo(400,200-(max*SCALER) * r);
-                        ctx3.stroke();
-                    ctx3.closePath();
+                    self._debug(ctx3);
 
                     var chart_sample = 100;
                     var skip = 0;
                     var inter = 1;
+                    var color;
 
-                    if(LOG){
-                        var input = value * SCALER;
-                        var color;
-                        if(value > cmin && input > lastin){
+                    if(self.LOG){
+                        var input = value * self.SCALER;
+                        if(value > self.cmin && input > self.lastin){
                             color = 'green';
-                            accum += (input-lastin) * DELTA_SCALE;
+                            self.accum += (input-self.lastin) * self.DELTA_SCALE;
                         }else{
                             color = 'red';
                         }
 
-                        lastin=input;
+                        self.lastin=input;
 
-                        chart_data.push(input>=1?input:0);
-                        labels.push( idx++ );
-                        if(idx > chart_sample){
-                            chart_data = chart_data.slice(1);
-                            labels = labels.slice(1);
+                        self.chart_data.push(input>=1?input:0);
+                        self.labels.push( self.idx++ );
+                        if(self.idx > chart_sample){
+                            self.chart_data = self.chart_data.slice(1);
+                            self.labels = self.labels.slice(1);
                         }
                         var d = {
-                            labels: labels,
+                            labels: self.labels,
                             datasets: [
                                 {
                                     label: "",
                                     fillColor: "rgba(220,220,220,0.85)",
                                     strokeColor: "rgba(220,220,220,1)",
                                     pointColor: "rgba(220,220,220,1)",
-                                    pointStrokeColor: color,//"#fff",
-                                    pointHighlightFill: color,//"#fff",
+                                    pointStrokeColor: color,
+                                    pointHighlightFill: color,
                                     pointHighlightStroke: "rgba(220,220,220,1)",
-                                    data: chart_data
+                                    data: self.chart_data
                                 }
                             ]
                         }
-                        if(chart === null){
-                            chart = new Chart(ctx2);
-                            chart.Line(d,opts);
+                        if(self.chart === null){
+                            self.chart = new Chart(ctx2);
+                            self.chart.Line(d,self.opts);
                         }else{
-                            chart.Line(d,opts);
+                            self.chart.Line(d,self.opts);
                         }
                     }
                 }else{
-                    avg.push(rms);
+                    self.avg.push(rms);
                 }
             }
+        }else{
+            console.log('request failed..');
         }
-    });
+    },
 
-    var wavemax = 0;
-    var animate = function (){
-        window.requestAnimationFrame(animate);
-        window.scrollBy(0, accum + 0.5 << 0);
+    kill: function (){
+        $('#myChart').remove();
+        $('#info').remove();
+        this.DEBUG.remove();
+        $('#endless-summer-container').remove();
+        this.audio.pause();
+        this.processor.onaudioprocess = null;
+        window.cancelAnimationFrame(this.animate);
+    },
 
-        vel = (drag * accum)/mass;
-        accum += vel;
-        DEBUG.html('m: '+mass+' / d: '+drag+' a: '+accum.toFixed(3));
+    animate: function (){
+        window.requestAnimationFrame(this.animate);
+        window.scrollBy(0, this.accum + 0.5 << 0);
 
-        wavemax = Math.max(wavemax,accum);
+        this.vel = (this.drag * this.accum)/this.mass;
+        this.accum += this.vel;
+        this.DEBUG.html('m: '+this.mass+' / d: '+this.drag+' a: '+this.accum.toFixed(3));
 
-        if(wavemax > 0 && accum < 10){
-            accum -= (wavemax * .009);
-            wavemax *= 0.99;
+        this.wavemax = Math.max(this.wavemax,this.accum);
+
+        if(this.wavemax > 0 && this.accum < 10){
+            this.accum -= (this.wavemax * .009);
+            this.wavemax *= 0.99;
         }
 
-        if($(window).scrollTop() >= $('body').height()-window.innerHeight*1.5){
+        if(this.$w.scrollTop() >= this.$body.height()-window.innerHeight*1.5){
             window.scrollTo(0,0);
         }
-    };
-    window.requestAnimationFrame(animate);
+    }
 }

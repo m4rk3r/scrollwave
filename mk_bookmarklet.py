@@ -1,5 +1,6 @@
 from os.path import join
 from re import sub
+from shutil import copy
 
 from rjsmin import jsmin
 from settings import URL
@@ -23,6 +24,7 @@ ocean = open(join(js,'ocean.js'),'r').read()
 ocean_output = open(join(js,'ocean-min.js'),'w')
 ocean_output.write( jsmin( ocean ))
 ocean_output.close()
+copy(join(js,'ocean-min.js'),'extension/')
 
 
 #####

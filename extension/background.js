@@ -1,52 +1,51 @@
+var has_listeners = false;
+var page;
+var previous_tab;
+var active = false;
+var port = null;
+var DEBUG = true;
 
-function req(qstring,port){
+var libraries = [
+    'jquery-1.11.1.min.js',
+    'underscore-min.js',
+    'chart.js',
+    'glue.js',
+    'ocean-min.js',
+    'ui.js'
+];
+
+function req(qstring, uid){
+    console.log('request: '+qstring)
     var xhr = new XMLHttpRequest();
     xhr.open("GET", qstring, true);
     xhr.onreadystatechange = function() {
       if ( xhr.readyState == 4 && port ) {
-          port.postMessage( {data:JSON.stringify(xhr.responseText)} );
+          port.postMessage( {type:'response',data:JSON.stringify(xhr.responseText), uid:uid} );
       }
     }
     xhr.send();
 }
 
-var has_listeners = false;
-var page;
-var previous_tab;
-var active = false;
-var client_id;
-var db  = {};
-var clients_for_tabs = {}
-var client_id = Math.random().toString(36).substring(2);
 
-chrome.extension.onConnect.addListener(function (port) {
+chrome.extension.onConnect.addListener(function (p) {
+    console.log('glue.js connected')
+    port = p;
     port.onMessage.addListener( function(msg) {
-        if( msg.handshake ){
-            db[ client_id ] = port;
-            clients_for_tabs[ previous_tab ] = client_id;
-            port.postMessage( {init:true,client_id:client_id})
-        }else{
-            req( msg.url+page, port );
+        console.log(msg)
+        switch(msg.type){
+            case 'request':
+                console.log('request: '+msg.url)
+                req( msg.url, msg.uid );
+            break;
         }
     });
-});   
+});
 
-
-function on_exit(data){
-    if(active && previous_tab == data.tabId ){
-        try{
-            if( clients_for_tabs[ previous_tab ] ) db[ client_id ].postMessage( {kill:true} )
-        }catch(err){}
-    }
-}
 
 function on_load(data){
     if(active && previous_tab == data.tabId && data.frameId == 0 ){
-        chrome.tabs.executeScript(previous_tab, {file: "jquery-1.8.2.js" });
-        chrome.tabs.executeScript(previous_tab, {file: "paralleloweb.js" });            
-    
-        var parsed = parseUri(data.url);
-        page = '&url='+parsed.host + (parsed.relative.length > 1?parsed.relative:'');
+        for(var i =0; i < libraries.length; i++)
+            chrome.tabs.executeScript(previous_tab, {file: libraries[i] });
     }
 }
 
@@ -54,22 +53,22 @@ function tab_replace(data){
     if( previous_tab == data.replacedTabId) previous_tab = data.tabId;
 }
 
-chrome.browserAction.onClicked.addListener(function (tab) { 
+chrome.browserAction.onClicked.addListener(function (tab) {
     if(!active){
         if(!has_listeners){
             has_listeners=true;
-            //chrome.webNavigation.onBeforeNavigate.addListener( on_exit );
             chrome.webNavigation.onCompleted.addListener( on_load );
             chrome.webNavigation.onTabReplaced.addListener( tab_replace );
         }
-        
+
         // activate icon
         chrome.browserAction.setIcon({path: 'iconactive.png'});
-        
-        chrome.tabs.executeScript(tab.id, {file: "jquery-1.8.2.js" });
-        chrome.tabs.executeScript(tab.id, {file: "paralleloweb.js" });
-        var parsed = parseUri(tab.url);
-        page = '&url='+parsed.host + (parsed.relative.length > 1?parsed.relative:'');
+
+        for(var i =0; i < libraries.length; i++){
+            console.log('loading: '+libraries[i])
+            chrome.tabs.executeScript(tab.id, {file: libraries[i] });
+        }
+
         previous_tab = tab.id;
         active = true;
     }else{
@@ -77,8 +76,10 @@ chrome.browserAction.onClicked.addListener(function (tab) {
         active = false;
         chrome.browserAction.setIcon({path: 'icon.png'});
         try{
-            if( clients_for_tabs[ previous_tab ] ) db[ client_id ].postMessage( {kill:true} )
-        }catch(err){}
+            if( port ) port.postMessage( {kill:true} )
+        }catch(err){
+            console.log(err);
+        }
     }
 });
 
@@ -86,7 +87,6 @@ chrome.browserAction.onClicked.addListener(function (tab) {
 chrome.tabs.onRemoved.addListener(function(tabId){
     if(active && tabId == previous_tab){
         chrome.browserAction.setIcon({path: 'icon.png'});
-        clients_for_tabs[ previous_tab ]=false;
         active=false;
     }
 });

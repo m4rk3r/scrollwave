@@ -23,26 +23,26 @@ function (){
          var template = '<style type=\'text/css\'>'+
                  '@keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
                  '@-webkit-keyframes load { 0% {opacity: 0.85; } 50% {opacity: 0.65; } 100% {opacity: .85; } }'+
-                 '.endless-summer {'+
+                 '#endless-summer-container {'+
                      '-webkit-transition: opacity .3s ease-in-out, -webkit-transform .3s ease-in-out;'+
                      'transition: opacity .3s ease-in-out, transform .3s ease-in-out;'+
                      'margin:0; list-style-type:none;'+
                      'width:480px; height:680px; padding:20px;overflow:scroll;'+
-                     'position:fixed;left:50%; margin-left:-280px; top:50%;'+
-                     'margin-top:-350px; box-shadow: 0px 0px 20px #888888;'+
+                     'position:fixed;left:50%; margin-left:-280px;'+
+                     'box-shadow: 0px 0px 20px #888888;'+
                      'opacity:0;z-index:999;'+
                      'transform:scale(0.95,0.95);'+
                      'background:#FFF'+
                  '}'+
-                 '.open {'+
+                 '#endless-summer-container.open {'+
                      'opacity:1;'+
                      'transform:scale(1,1);'+
                      '-webkit-transform:scale(1,1);'+
                  '}'+
-                 'input {'+
+                 '#endless-summer-container input {'+
                      'width:100%; height:50px;margin-top:10px;font-size:18px;padding:0 5px;'+
                  '}'+
-                 'li {'+
+                 '#endless-summer-container li {'+
                      'margin:0 0 10px 0;'+
                      'cursor:pointer;'+
                      'position:relative;'+
@@ -50,19 +50,19 @@ function (){
                      'background-repeat:no-repeat;'+
                      'background-position:0 -45px;'+
                  '}'+
-                 'ul li:last-of-type {'+
+                 '#endless-summer-container li:last-of-type {'+
                      'height:auto;'+
                  '}'+
-                 'li.loading{'+
+                 '#endless-summer-container li.loading{'+
                      'animation:load 1.5s linear infinite;'+
                      '-webkit-animation:load 1.5s linear infinite;'+
                  '}'+
-                 'li.loading:after{'+
+                 '#endless-summer-container li.loading:after{'+
                      'content:\'LOADING\';position:absolute; top:48%;left:50%;'+
                      'font-size:30px; color:#FFF;margin-left:-70;'+
                      'font-family:\'arial\';'+
                  '}'+
-                 '.loading-beacon {'+
+                 '#endless-summer-container .loading-beacon {'+
                      'position:absolute; left:50%;'+
                      'top:50%;'+
                  '}'+
@@ -101,6 +101,11 @@ function (){
 
             $('body').append(rendered(videos=data.videos));
             $el = $('#endless-summer-container');
+
+            var h = window.innerHeight*0.75;
+            $el.height(h);
+            $el.css({top:window.innerHeight/2-(h+20*2)/2});
+
             _.delay(function (){
                 $el.addClass('open');
             },100);
