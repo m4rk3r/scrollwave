@@ -1,6 +1,6 @@
-// window.kill = function (){
-//     $('#endless-summer-container').remove();
-// }
+ es.kill = function (){
+     $('#endless-summer-container').remove();
+ }
 chrome.storage.local.set({'kill':function (){ $('#endless-summer-container').remove();}});
 
 var URL='https://duskjacket.com/endless-summer/';

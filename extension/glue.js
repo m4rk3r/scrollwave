@@ -5,7 +5,7 @@
 
 var response_map = {};
 var endproc;
-var es;
+var es = {};
 
 var port = chrome.extension.connect({name: "datapipe-endless-summer"});
 port.onMessage.addListener(function(msg) {

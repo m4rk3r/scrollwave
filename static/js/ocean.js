@@ -56,7 +56,7 @@ EndlessSummer = {
         this.DEBUG = $('#debug');
 
         this.load();
-        //window.requestAnimationFrame(this.animate);
+        this.animate();
     },
 
     filter: function (i) {
@@ -198,26 +198,30 @@ EndlessSummer = {
         $('#endless-summer-container').remove();
         this.audio.pause();
         this.processor.onaudioprocess = null;
-        window.cancelAnimationFrame(this.animate);
+        window.cancelAnimationFrame(this.handle);
     },
 
     animate: function (){
-        window.requestAnimationFrame(this.animate);
-        window.scrollBy(0, this.accum + 0.5 << 0);
+        var self = this;
+        function loop(){
+            self.handle = window.requestAnimationFrame(loop);
+            window.scrollBy(0, self.accum + 0.5 << 0);
 
-        this.vel = (this.drag * this.accum)/this.mass;
-        this.accum += this.vel;
-        this.DEBUG.html('m: '+this.mass+' / d: '+this.drag+' a: '+this.accum.toFixed(3));
+            self.vel = (self.drag * self.accum)/self.mass;
+            self.accum += self.vel;
+            self.DEBUG.html('m: '+self.mass+' / d: '+self.drag+' a: '+self.accum.toFixed(3));
 
-        this.wavemax = Math.max(this.wavemax,this.accum);
+            self.wavemax = Math.max(self.wavemax,self.accum);
 
-        if(this.wavemax > 0 && this.accum < 10){
-            this.accum -= (this.wavemax * .009);
-            this.wavemax *= 0.99;
+            if(self.wavemax > 0 && self.accum < 10){
+                self.accum -= (self.wavemax * .009);
+                self.wavemax *= 0.99;
+            }
+
+            if(self.$w.scrollTop() >= self.$body.height()-window.innerHeight*1.5){
+                window.scrollTo(0,0);
+            }
         }
-
-        if(this.$w.scrollTop() >= this.$body.height()-window.innerHeight*1.5){
-            window.scrollTo(0,0);
-        }
+        window.requestAnimationFrame(loop);
     }
 }
