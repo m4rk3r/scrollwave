@@ -21,7 +21,7 @@ EndlessSummer = {
     mass: 100,
 
     SCALER: 100,
-    DELTA_SCALE: 3,
+    DELTA_SCALE: 1.5,
     FILTER_WIDTH:9,
 
     $w: $(window),
@@ -54,6 +54,12 @@ EndlessSummer = {
             "<div id='debug'>30.00</div>"
         );
         this.DEBUG = $('#debug');
+
+        if(!this.LOG){
+            this.DEBUG.hide();
+            $('#info').hide();
+            $('#myChart').hide();
+        }
 
         this.load();
         this.animate();
@@ -136,24 +142,25 @@ EndlessSummer = {
 
                     self.cmin = self.max * self.THRESHOLD + self.min;
 
-                    self._debug(ctx3);
+                    if(self.LOG)
+                        self._debug(ctx3);
 
                     var chart_sample = 100;
                     var skip = 0;
                     var inter = 1;
                     var color;
 
+                    var input = value * self.SCALER;
+                    if(value > self.cmin && input > self.lastin){
+                        color = 'green';
+                        self.accum += (input-self.lastin) * self.DELTA_SCALE;
+                    }else{
+                        color = 'red';
+                    }
+
+                    self.lastin=input;
+
                     if(self.LOG){
-                        var input = value * self.SCALER;
-                        if(value > self.cmin && input > self.lastin){
-                            color = 'green';
-                            self.accum += (input-self.lastin) * self.DELTA_SCALE;
-                        }else{
-                            color = 'red';
-                        }
-
-                        self.lastin=input;
-
                         self.chart_data.push(input>=1?input:0);
                         self.labels.push( self.idx++ );
                         if(self.idx > chart_sample){
@@ -213,8 +220,8 @@ EndlessSummer = {
 
             self.wavemax = Math.max(self.wavemax,self.accum);
 
-            if(self.wavemax > 0 && self.accum < 10){
-                self.accum -= (self.wavemax * .009);
+            if(self.wavemax > 0 && self.accum < 20){
+                self.accum -= (self.wavemax * .008);
                 self.wavemax *= 0.99;
             }
 
